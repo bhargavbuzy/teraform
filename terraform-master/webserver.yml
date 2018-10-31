@@ -1,0 +1,54 @@
+---
+- hosts: webservers
+  become: yes
+  vars:
+    http_port: 443
+    doc_dir: /ansible/
+    doc_root: /var/www/html/ansible/
+    max_clients: 6
+ 
+  vars_prompt:
+   - name: username
+     prompt: what is your name?
+
+
+  tasks:
+    - name: Ensure that httpd is installed
+      yum: name=httpd state=present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure that httpd is installed
+      apt: name=apache2 state=present
+      when: ansible_os_family == "Debian"
+
+    - name: create DIR
+      file: path=/var/www/html/ansible state=directory
+
+    - name: Ensure that services are started
+      service: name=httpd state=started enabled=yes
+
+    - name: deploy httpd conf file
+      template: src=templates/httpd.j2 dest=/etc/httpd/conf/httpd.conf
+      notify: 
+        - Restart Apache
+
+    - name: copying index.html
+      template: src=templates/index.j2 dest={{doc_root}}/index.html
+      notify:
+        - Restart Apache
+
+
+  handlers:
+    - name: Restart Apache
+      service: name=httpd state=restarted
+
+
+- hosts: dbservers
+  become: yes
+
+  tasks:
+    - name: Ensure that mysql is installed
+      yum: name=mysql-server state=present
+
+    - name: Ensure that services are started
+      service: name=mysqld state=started enabled=yes 

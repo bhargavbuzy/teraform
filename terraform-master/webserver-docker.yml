@@ -1,0 +1,11 @@
+---
+#- hosts: webservers
+ # become: yes
+ # roles:
+ #   - apache
+
+
+- hosts: dbservers
+  become: no
+  roles:
+    - mongrelion.docker 
